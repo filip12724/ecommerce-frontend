@@ -15,26 +15,24 @@
 
 <script>
 import productCard from '@/components/layout/ui/productCard.vue';
-  export default {
-    components: {productCard},
-    data() {
-      return {
-        products: [
-          { name: "Premium Wireless Headphones", price: "299.99", image: "https://via.placeholder.com/600x600" },
-          { name: "Smart Fitness Tracker", price: "159.99", image: "https://via.placeholder.com/600x600" },
-          { name: "Modern Desk Lamp", price: "89.99", image: "https://via.placeholder.com/600x600" },
-          { name: "Leather Office Chair", price: "449.99", image: "https://via.placeholder.com/600x600" },
-          { name: "Wireless Charging Pad", price: "39.99", image: "https://via.placeholder.com/600x600" },
-          { name: "Noise-Canceling Earbuds", price: "199.99", image: "https://via.placeholder.com/600x600" }
-        ]
-      };
-    },
-    methods:{
-      handleAddToCart(){
-        console.log("Product added to cart");
-      }
+
+export default {
+  components: { productCard },
+  computed: {
+    products() {
+      return this.$store.getters['products/getProducts'];
     }
-  };
+  },
+  created() {
+    this.$store.dispatch('products/getProducts');
+  },
+  methods: {
+    handleAddToCart() {
+      console.log("Product added to cart");
+    }
+  }
+};
+
 </script>
 
 <style>
