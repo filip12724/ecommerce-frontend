@@ -1,5 +1,6 @@
 <template>
-         <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
+  <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300"
+  @click="navigateToProduct">
     <div class="aspect-square bg-gray-100 overflow-hidden">
       <img 
         :src="require('@/assets/images/basic.jpg')"
@@ -19,7 +20,7 @@
                 Add to Cart
               </button>
             </div>
-          </div>
+  </div>
 </template>
 
 <script>
@@ -30,8 +31,15 @@ export default {
             required: true,
         }
     },
-    emits:['add-to-cart']
-    
+    emits:['add-to-cart'],
+    methods:{
+      navigateToProduct(){
+        this.$router.push({
+          name:'product',
+          params:{id:this.product.id}
+        })
+      }
+    }
 }
 </script>
 
