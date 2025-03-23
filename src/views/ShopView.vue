@@ -1,6 +1,18 @@
 <template>
   <section class="py-16 container mx-auto px-6 max-w-6xl">
-      
+
+    <div v-if="error" class="mb-8 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+      {{ error.message }}
+      <button 
+        @click="clearError" 
+        class="float-right text-red-700 hover:text-red-900"
+      >
+        ×
+      </button>
+    </div>
+
+   
+
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           
           <input 
@@ -16,6 +28,8 @@
           
           <div class="relative w-full sm:w-48">
               <select 
+                  v-model="selectedSort"
+                  @change="handleSortChange"
                   class="w-full px-4 py-2 border border-gray-300 rounded-lg 
                          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
                          appearance-none pr-10"
@@ -42,9 +56,12 @@
               :product="product"
               @add-to-cart="handleAddToCart"
           />
+          <div v-if="isLoading" class="mb-8 text-center text-blue-600">
+            Loading products...
+          </div>
       </div>
   </section>
-  </template>
+</template>
 
 <script>
 import _ from 'lodash'; 
@@ -55,19 +72,35 @@ export default {
   data() {
     return {
       isLoading: false,
-      error: null
+      debouncedSearch: null
     }
   },
 
   watch: {
     searchedInput(newVal) {
       this.debouncedSearch(newVal);
+    },
+    selectedSort(newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.fetchProducts();
+      }
     }
   },
 
   computed: {
+    error() {
+      return this.$store.state.products.error;
+    },
     products() {
       return this.$store.getters['products/getProducts'];
+    },
+    selectedSort:{
+      get(){
+        return this.$store.state.products.sortBy
+      },
+      set(value){
+        return this.$store.commit('products/setSortBy',value)
+      }
     },
     searchedInput: {
       get() {
@@ -80,28 +113,36 @@ export default {
   },
 
   created() {
-    this.debouncedSearch = _.debounce(this.searchProducts, 500);
-
-    if (this.searchedInput) {
-      this.searchProducts(this.searchedInput);
-    } else {
-      this.$store.dispatch('products/getProducts');
-    }
+    this.debouncedSearch = _.debounce(this.fetchProducts, 500);
+    this.fetchProducts();
     
   },
 
   methods: {
-    async searchProducts(searchTerm) {
+
+    async fetchProducts() {
+      const params = {
+        search: this.searchedInput,
+        sort: this.selectedSort 
+      };
+      
       try {
         this.isLoading = true;
-        await this.$store.dispatch('products/getProducts', {
-          search: searchTerm 
-        });
-      } catch (error) {
-        this.error = error.response?.data?.message || 'Search failed';
+        this.$store.commit('products/clearError');
+
+        await this.$store.dispatch('products/getProducts', params);
+
+      } catch (unexceptedError) {
+         console.error('Component error:', unexceptedError);
       } finally {
         this.isLoading = false;
       }
+    },
+    handleSortChange() {
+      this.fetchProducts();
+    },
+    clearError() {
+      this.$store.commit('products/clearError');
     },
     handleAddToCart() {
       console.log("Product added to cart");

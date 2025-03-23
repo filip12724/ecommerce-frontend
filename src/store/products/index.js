@@ -7,7 +7,9 @@ export default{
     state(){
         return{
             products:Object,
-            searchTerm: ''
+            searchTerm: '',
+            sortBy: '',
+            error: null,
         }
     },
     actions,
