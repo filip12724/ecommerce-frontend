@@ -6,10 +6,16 @@ export default{
     namespaced:true,
     state(){
         return{
-            products:Object,
+            products:[],
             searchTerm: '',
             sortBy: '',
             error: null,
+            pagination:{
+                currentPage: 1,
+                totalPages: 1,
+                perPage: 6,
+                totalProducts: 0,
+            }
         }
     },
     actions,
