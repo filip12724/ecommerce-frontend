@@ -12,7 +12,8 @@ export default ({
     headerComponent,
   },
   created(){
-    this.$store.dispatch('products/getProducts')
+    this.$store.dispatch('products/getProducts'),
+    this.$store.dispatch('categories/getCategories')
   }
 })
 </script>

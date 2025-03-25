@@ -1,6 +1,6 @@
 <template>
   <section class="py-16 container mx-auto px-6 max-w-6xl">
-    <!-- Error Message -->
+
     <div v-if="error" class="mb-8 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
       {{ error.message }}
       <button 
@@ -11,7 +11,7 @@
       </button>
     </div>
 
-    <!-- Filter Toggle Button for Small Screens -->
+
     <div class="mb-4 sm:hidden">
       <button 
         @click="showFilters = !showFilters" 
@@ -22,7 +22,7 @@
     </div>
 
     <div class="flex flex-col sm:flex-row gap-8">
-      <!-- Filter Section -->
+
       <div :class="{'block': showFilters, 'hidden': !showFilters}" class="sm:block sm:w-64 space-y-6">
         <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <h3 class="text-lg font-semibold mb-4">Filter by Price</h3>
@@ -51,21 +51,24 @@
           <h3 class="text-lg font-semibold mb-4">Categories</h3>
           <div class="space-y-3">
             <label 
-              v-for="category in sampleCategories" 
+              v-for="category in categories" 
               :key="category" 
               class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
             >
               <input 
                 type="checkbox" 
                 class="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                :value="category.id"
+                v-model="selectedCategory"
+                @change="handleCategoryFiltering"
               >
-              <span class="text-gray-700">{{ category }}</span>
+              <span class="text-gray-700">{{ category.name }}</span>
             </label>
           </div>
         </div>
       </div>
 
-      <!-- Main Content -->
+
       <div class="flex-1">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <input 
@@ -99,7 +102,6 @@
           </div>
         </div>
 
-        <!-- Product Grid with Updated Breakpoints -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <productCard
             v-for="(product, index) in products"
@@ -146,9 +148,9 @@ export default {
   data() {
     return {
       isLoading: false,
-      showFilters: false, // controls filter dropdown on small screens
+      showFilters: false,
+      selectedCategory: [],
       debouncedSearch: null,
-      sampleCategories: ['Electronics', 'Clothing', 'Home', 'Books', 'Sports', 'Beauty']
     }
   },
 
@@ -174,6 +176,9 @@ export default {
     },
     products() {
       return this.$store.getters['products/getProducts'];
+    },
+    categories(){
+      return this.$store.getters['categories/getCategories'];
     },
     selectedSort:{
       get(){
@@ -216,7 +221,8 @@ export default {
       const params = {
         search: this.searchedInput,
         sort: this.selectedSort,
-        page: this.currentPage
+        page: this.currentPage,
+        category: this.selectedCategory
       };
       
       try {
@@ -239,6 +245,9 @@ export default {
       }
     },
     handleSortChange() {
+      this.fetchProducts();
+    },
+    handleCategoryFiltering(){
       this.fetchProducts();
     },
     clearError() {
