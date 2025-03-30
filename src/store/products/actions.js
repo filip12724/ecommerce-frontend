@@ -8,7 +8,8 @@ export default {
           params: {
             search: payload.search || '',
             sort: payload.sort || '',
-            page: payload.page || 1
+            page: payload.page || 1,
+            category: payload.category || null
           }
         });
         

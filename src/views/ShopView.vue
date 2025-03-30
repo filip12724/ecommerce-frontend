@@ -40,10 +40,6 @@
                 class="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
             </div>
-            <input 
-              type="range" 
-              class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-sm"
-            >
           </div>
         </div>
 
@@ -140,7 +136,7 @@
 </template>
 
 <script>
-import _ from 'lodash'; 
+import _ from 'lodash';
 import productCard from '@/components/layout/ui/productCard.vue';
 
 export default {
@@ -156,18 +152,32 @@ export default {
 
   watch: {
     searchedInput(newVal) {
-    this.currentPage = 1; 
-    this.debouncedSearch(newVal);
-  },
-  selectedSort(newVal, oldVal) {
-    if (newVal !== oldVal) {
+      this.currentPage = 1;
+      this.debouncedSearch(newVal);
+      this.saveFilters();
+    },
+    selectedSort(newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.currentPage = 1;
+        this.fetchProducts();
+        this.saveFilters();
+      }
+    },
+    selectedCategory() {
       this.currentPage = 1;
       this.fetchProducts();
+      this.saveFilters();
+    },
+    currentPage() {
+      this.$nextTick(() => {
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
+        });
+      this.fetchProducts();
+      this.saveFilters();
     }
-  },
-  currentPage() {
-    this.fetchProducts()
-  }
   },
 
   computed: {
@@ -177,46 +187,52 @@ export default {
     products() {
       return this.$store.getters['products/getProducts'];
     },
-    categories(){
+    categories() {
       return this.$store.getters['categories/getCategories'];
     },
-    selectedSort:{
-      get(){
-        return this.$store.state.products.sortBy
+    selectedSort: {
+      get() {
+        return this.$store.state.products.sortBy;
       },
-      set(value){
-        return this.$store.commit('products/setSortBy',value)
+      set(value) {
+        this.$store.commit('products/setSortBy', value);
       }
     },
     searchedInput: {
       get() {
-        return this.$store.state.products.searchTerm
+        return this.$store.state.products.searchTerm;
       },
       set(value) {
-        this.$store.commit('products/setSearchTerm', value)
+        this.$store.commit('products/setSearchTerm', value);
       }
     },
     currentPage: {
       get() {
-        return this.$store.state.products.pagination.currentPage
+        return this.$store.state.products.pagination.currentPage;
       },
       set(value) {
-        this.$store.commit('products/setCurrentPage', value)
+        this.$store.commit('products/setCurrentPage', value);
       }
-   },
-    pagination(){
-      return this.$store.state.products.pagination
+    },
+    pagination() {
+      return this.$store.state.products.pagination;
     }
   },
 
   created() {
+    const savedFilters = localStorage.getItem('productFilters');
+    if (savedFilters) {
+      const { searchTerm, sortBy, selectedCategory, currentPage } = JSON.parse(savedFilters);
+      if (searchTerm) this.$store.commit('products/setSearchTerm', searchTerm);
+      if (sortBy) this.$store.commit('products/setSortBy', sortBy);
+      if (currentPage) this.$store.commit('products/setCurrentPage', currentPage);
+      if (selectedCategory) this.selectedCategory = selectedCategory;
+    }
     this.debouncedSearch = _.debounce(this.fetchProducts, 500);
     this.fetchProducts();
-    
   },
-
+  
   methods: {
-
     async fetchProducts() {
       const params = {
         search: this.searchedInput,
@@ -228,18 +244,9 @@ export default {
       try {
         this.isLoading = true;
         this.$store.commit('products/clearError');
-
         await this.$store.dispatch('products/getProducts', params);
-
-        this.$nextTick(() => {
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
-      });
-
-      } catch (unexceptedError) {
-         console.error('Component error:', unexceptedError);
+      } catch (unexpectedError) {
+        console.error('Component error:', unexpectedError);
       } finally {
         this.isLoading = false;
       }
@@ -247,7 +254,7 @@ export default {
     handleSortChange() {
       this.fetchProducts();
     },
-    handleCategoryFiltering(){
+    handleCategoryFiltering() {
       this.fetchProducts();
     },
     clearError() {
@@ -255,6 +262,15 @@ export default {
     },
     handleAddToCart() {
       console.log("Product added to cart");
+    },
+    saveFilters() {
+      const filters = {
+        searchTerm: this.searchedInput,
+        sortBy: this.selectedSort,
+        selectedCategory: this.selectedCategory,
+        currentPage: this.currentPage
+      };
+      localStorage.setItem('productFilters', JSON.stringify(filters));
     }
   }
 };
